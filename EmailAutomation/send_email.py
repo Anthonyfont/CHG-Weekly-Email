@@ -1,6 +1,8 @@
 import pandas as pd
 from datetime import datetime, timedelta
-import win32com.client as win32
+import smtplib  # Nueva línea para importar smtplib
+from email.mime.multipart import MIMEMultipart  # Nueva línea para el tipo de mensaje
+from email.mime.text import MIMEText  # Nueva línea para el cuerpo del mensaje
 from pathlib import Path
 from office365.sharepoint.client_context import ClientContext
 from office365.runtime.auth.user_credential import UserCredential
@@ -12,7 +14,7 @@ from io import BytesIO
 # =========================
 
 username = "font.a@pg.com"  # Tu correo de SharePoint
-password = "Cartag08411!"       # Tu contraseña de SharePoint
+password = "Cartag08411!"     # Tu contraseña de SharePoint
 site_url = "https://pgone.sharepoint.com/sites/NATST"
 file_url = "/sites/NATST/Ops/Shared Documents/PLATINUM/Change Management NA Platinum/TIM Change mgmt E2E source of truth.xlsx"
 SHEET_NAME = "Changes tracker"   # Nombre de la hoja que deseas leer
@@ -153,14 +155,28 @@ html_content = html_content.replace("{{MINUTE_CONTENT}}", minutes_html)
 # CREAR Y ENVIAR CORREO
 # =========================
 
-outlook = win32.Dispatch("Outlook.Application")
-mail = outlook.CreateItem(0)
+def send_email():
+    # Configurar el mensaje
+    sender_email = "font.a@pg.com"  # Cambia esto al correo del remitente
+    receiver_email = "font.a@pg.com"  # Cambia esto al correo del destinatario
+    subject = f"[Upcoming changes cross application impact] Weekly Ecosystem Meeting -- {send_date}"
 
-# Establecer el cuerpo del correo HTML
-mail.HTMLBody = html_content
-mail.Subject = f"[Upcoming changes cross application impact] Weekly Ecosystem Meeting -- {send_date}"
-mail.To = "font.a@pg.com"
-mail.Importance = 2
-mail.Send()
+    # Crear el mensaje
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = receiver_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(html_content, 'html'))
 
-print("✅ Correo enviado correctamente con tabla y minuta.")
+    # Enviar el correo utilizando SMTP
+    try:
+        with smtplib.SMTP('smtp.office365.com', 587) as server:  # Cambia a tu servidor SMTP
+            server.starttls()  # Iniciar la conexión TLS
+            server.login(sender_email, "Cartag08411!")  # Cambia a tu contraseña
+            server.send_message(msg)
+        print("✅ Correo enviado correctamente.")
+    except Exception as e:
+        print(f"Error al enviar el correo: {e}")
+
+if __name__ == "__main__":
+    send_email()
