@@ -3,6 +3,7 @@ name: Send Email Weekly
 on:
   schedule:
     - cron: '0 18 * * 2'  # Ejecutar todos los martes a las 6 PM EST
+    workflow_dispatch:  # Permite ejecutar manualmente el flujo de trabajo
 
 jobs:
   sendEmail:
